@@ -33,18 +33,19 @@ local physics = require( "physics" )
 physics.start()
 
 -- Config variables
-local config = require('game-config')
+local configMaker = require('game-config')
+local config = configMaker.new(display)
 local bendingBoxSize = 20
 local maxBendingBoxCount = 5
 local bendingCoefficient = 1
-local bendingRadius = 20
-local bendingPixelsPerRow = 40
 
 local crateSize = 32
 
 -- Local variables and forward declarations
-local letterboxWidth = math.abs(display.screenOriginX)
-local letterboxHeight = math.abs(display.screenOriginY)
+local letterbox = {
+	width = math.abs(display.screenOriginX),
+	height = math.abs(display.screenOriginY)
+}
 local touchBehavior = "move"
 local previousTime = 0
 local previousX = 0
@@ -54,25 +55,11 @@ local touchY = 0
 local velocityX = 0
 local velocityY = 0
 
-local bendingPixelSize = math.floor(display.actualContentWidth / bendingPixelsPerRow)
-local bendingPixelsPerColumn = math.floor(display.actualContentHeight / bendingPixelSize)
-local bendingPixelRadius = math.floor(bendingRadius / bendingPixelSize)
-
 bendingBoxes = {}
 local bendingBoxIndex = 0
 
-function bendingPixelXY( x, y )
-	pixelX = math.floor(x / bendingPixelSize)
-	pixelY = math.floor(y / bendingPixelSize)
-	return pixelX, pixelY
-end
-
-function getBendingPixel( x, y )
-	return bendingBoxes[tostring(x) .. tostring(y)]
-end
-
-for y=0,bendingPixelsPerColumn do
-	for x=0,bendingPixelsPerRow do
+for y=0,config.bending.pixel.per.column do
+	for x=0,config.bending.pixel.per.row do
 		x = x - 2
 		local bendingPixel = display.newRect( mainGroup, x*bendingPixelSize, y*bendingPixelSize, bendingPixelSize, bendingPixelSize )
 		bendingPixel.strokeWidth = 2
@@ -82,64 +69,24 @@ for y=0,bendingPixelsPerColumn do
 	end
 end
 
-local crate
-
--- Create "walls and floor" around screen
-local wallL = display.newRect( mainGroup, 0-letterboxWidth, display.contentCenterY+150, 20, display.actualContentHeight-150 )
-wallL.anchorX = 1
-physics.addBody( wallL, "static", { bounce=1, friction=0.1 } )
-
-local wallR = display.newRect( mainGroup, 320+letterboxWidth, display.contentCenterY+150, 20, display.actualContentHeight-150 )
-wallR.anchorX = 0
-physics.addBody( wallR, "static", { bounce=1, friction=0.1 } )
-
-local floor = display.newRect( mainGroup, display.contentCenterX, 480+letterboxHeight, display.actualContentWidth, 20 )
-floor.anchorY = 0
-physics.addBody( floor, "static", { bounce=0.4, friction=0.6 } )
+local level = require('level')
+level.make(display, physics, mainGroup, letterbox)
 
 -- Create the particle system
-local particleSystem = physics.newParticleSystem(
-{
-	filename = "waterParticle.png",
-	colorMixingStrength = 0.2,
-	radius = 1.5,
-	imageRadius = 4.5,
-	surfaceTensionPressureStrength=0.2,
-	surfaceTensionNormalStrength=0.2
-})
+local particleManager = require('particles')
+local particleSystem = particleManager.makeParticleSystem(physics)
 mainGroup:insert( particleSystem )
-
--- Parameters for red particle faucet
-local particleParamsRed = {
-	x = 0-letterboxWidth,
-	y = 300-letterboxHeight,
-	velocityX = 110,
-	velocityY = 80,
-	color = { 1, 0, 0.2, 1 },
-	lifetime = 48,
-	flags = { "water", "colorMixing" }
-}
-
--- Parameters for blue particle faucet
-local particleParamsBlue =
-{
-	x = 320+letterboxWidth,
-	y = 300-letterboxHeight,
-	velocityX = -110,
-	velocityY = 80,
-	color = { 0.2, 0.4, 1, 1 },
-	lifetime = 48,
-	flags = { "water", "colorMixing" }
-}
+local particleParams = particleManager.makeParticleParams(letterbox)
 
 -- Generate particles on repeating timer
 local function onTimer( event )
-	particleSystem:createParticle( particleParamsRed )
-	particleSystem:createParticle( particleParamsBlue )
+	particleSystem:createParticle( particleParams.red )
+	particleSystem:createParticle( particleParams.blue )
 end
 timer.performWithDelay( 10, onTimer, 0 )
 
 -- make crate
+local crate
 local function makeCrate( event )
 	crate = display.newRect( mainGroup, 30, 30, crateSize, crateSize )
 	physics.addBody( crate, "dynamic", { density=1.5 } )
@@ -165,34 +112,6 @@ local function enterFrame( event )
 			halfWidth = bendingBoxSize/2,
 			halfHeight = bendingBoxSize/2
 		})
-	end
-end
-
-
-local function pixelBend( event )
-	centreX, centreY = bendingPixelXY(event.x, event.y)
-
-	for y = centreY - bendingPixelRadius, centreY + bendingPixelRadius do
-		for x = centreX - bendingPixelRadius, centreX + bendingPixelRadius do
-
-			local relX = x - centreX
-			local relY = y - centreY
-			local distance = math.sqrt(relX*relX + relY*relY)
-
-			if distance <= bendingPixelRadius then
-				local centrePixel = getBendingPixel(x, y)
-				centrePixel:setStrokeColor( 0.25, 0.4, 1 )
-				centrePixel:setFillColor( 0.25, 0.4, 1, 1 )
-
-				display.newLine(
-					mainGroup,
-					x * bendingPixelSize,
-					y * bendingPixelSize,
-					centreX * bendingPixelSize,
-					centreY * bendingPixelSize
-				)
-			end
-		end
 	end
 end
 
@@ -245,4 +164,4 @@ end
 Runtime:addEventListener( "touch", onTouch )
 
 local switches = require('switches')
-switches.addSwitches(display, widget, mainGroup, letterboxHeight)
+switches.addSwitches(display, widget, mainGroup, letterbox.height)

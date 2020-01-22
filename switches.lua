@@ -1,5 +1,5 @@
 -- Switches and labels
-local switches = {
+return {
     addSwitches = function(display, widget, mainGroup, letterboxHeight)
         local switchGroup = display.newGroup()
         mainGroup:insert( switchGroup )
@@ -54,4 +54,3 @@ local switches = {
         switchGroup.y = 80 - letterboxHeight
     end
 }
-return switches
