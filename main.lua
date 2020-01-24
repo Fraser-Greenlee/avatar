@@ -35,6 +35,9 @@ physics.start()
 -- Config variables
 local configMaker = require('game-config')
 local config = configMaker.new(display)
+config.mainGroup = mainGroup
+config.display = display
+
 local bendingBoxSize = 20
 local maxBendingBoxCount = 5
 local bendingCoefficient = 1
@@ -55,19 +58,8 @@ local touchY = 0
 local velocityX = 0
 local velocityY = 0
 
-bendingBoxes = {}
-local bendingBoxIndex = 0
-
-for y=0,config.bending.pixel.per.column do
-	for x=0,config.bending.pixel.per.row do
-		x = x - 2
-		local bendingPixel = display.newRect( mainGroup, x*bendingPixelSize, y*bendingPixelSize, bendingPixelSize, bendingPixelSize )
-		bendingPixel.strokeWidth = 2
-		bendingPixel:setStrokeColor( 1, 0.4, 0.25 )
-		bendingPixel:setFillColor( 1, 0.4, 0.25, 0.2 )
-		bendingBoxes[tostring(x) .. tostring(y)] = bendingPixel
-	end
-end
+local bend = require('bend')
+-- bend.drawGrid(display, mainGroup, config)
 
 local level = require('level')
 level.make(display, physics, mainGroup, letterbox)
@@ -93,6 +85,8 @@ local function makeCrate( event )
 end
 timer.performWithDelay( 20, makeCrate, 1 )
 
+--[[
+
 -- Function to query region or destroy particles in particle system
 local function enterFrame( event )
 
@@ -115,8 +109,10 @@ local function enterFrame( event )
 	end
 end
 
+]]
+
 -- Function to create/move/remove "touch box"
-local function onTouch( event )
+local function onTouch(event)
 
 	local timeDelta = ( event.time / 1000 ) - previousTime
 	if ( timeDelta > 0 ) then
@@ -132,32 +128,14 @@ local function onTouch( event )
 	end
 
 	if ( "began" == event.phase ) then
-
-		Runtime:addEventListener( "enterFrame", enterFrame )
-		velocityX = 0.0
-		velocityY = 0.0
-		box = display.newRect( mainGroup, event.x, event.y, bendingBoxSize, bendingBoxSize )
-		box.strokeWidth = 2
-		box:setStrokeColor( 1, 0.4, 0.25 )
-		box:setFillColor( 1, 0.4, 0.25, 0.2 )
-
-		pixelBend(event)
-
-	elseif ( "moved" == event.phase ) then
-
-		-- if moved min distance (& min time?)
-			-- add new box
-
-		if box then
-			box.x = event.x
-			box.y = event.y
+		if ( timeDelta > 0 ) then
+			print(event.x, event.y)
+			bend.run(config, particleSystem, event.x, event.y)
 		end
-
+	elseif ( "moved" == event.phase ) then
+		print('moved')
 	elseif ( "ended" == event.phase or "cancelled" == event.phase ) then
-
-		Runtime:removeEventListener( "enterFrame", enterFrame )
-		display.remove( box )
-		box = nil
+		print('end')
 	end
 	return true
 end

@@ -2,12 +2,14 @@ local startConfig = {
     bending = {
         pixel = {
             per = {
-                row = 40
+                row = 60
             }
         },
         radius = {
-            px = 20
-        }
+            px = 10
+        },
+        boxes = {},
+        boxIndex = 0 -- is this needed?
     },
     crateSize = 32
 }
