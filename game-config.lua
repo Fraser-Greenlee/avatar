@@ -10,6 +10,7 @@ local startConfig = {
         },
         boxes = {},
         renderDelay = 0.1,
+        staticDelay = 0.5,
         power = 200,
         maxAge = 1,
         playerVstatic = 0.2,

@@ -111,6 +111,12 @@ end
 
 ]]
 
+local staticBend = function()
+	if (previousTime + config.bending.staticDelay < system.getTimer()) then
+		bend.run(config, particleSystem, system.getTimer(), touchX, touchY, velocityX, velocityY)
+	end
+end
+
 -- Function to create/move/remove "touch box"
 local function onTouch(event)
 
@@ -126,15 +132,17 @@ local function onTouch(event)
 		velocityX = ( positionDeltaX / timeDelta )
 		velocityY = ( positionDeltaY / timeDelta )
 
-		bend.run(config, particleSystem, event.time, event.x, event.y, velocityX, velocityY)
+		bend.run(config, particleSystem, event.time, touchX, touchY, velocityX, velocityY)
 
 		if config.bending.debugPrint then
 			if ( "began" == event.phase ) then
 				print('began')
+				local staticTimer = timer.performWithDelay( 1, staticBend, -1 )
 			elseif ( "moved" == event.phase ) then
 				print('moved')
 			elseif ( "ended" == event.phase or "cancelled" == event.phase ) then
 				print('end')
+				timer.cancel( staticTimer )
 			end
 		end
 	end

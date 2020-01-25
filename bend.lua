@@ -40,7 +40,7 @@ return {
         end
     end,
 
-    run = function(config, particleSystem, time, globalX, globalY, playerVX, playerVY)
+    run = function(config, particleSystem, eventTime, globalX, globalY, playerVX, playerVY)
         centreX, centreY = bendingPixelXY(config, globalX, globalY)
 
         for y = centreY - config.bending.radius.px, centreY + config.bending.radius.px do
@@ -59,7 +59,7 @@ return {
                     pixel.deltaVY = setDeltaV(config, relY, playerVY)
                     pixel.x = x * config.bending.pixel.size
                     pixel.y = y * config.bending.pixel.size
-                    pixel.madeAt = time
+                    pixel.madeAt = eventTime
                     config.bending.boxes[tostring(x) .. ',' .. tostring(y)] = pixel
 
                     showDebug(config, pixel)
