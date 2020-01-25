@@ -59,7 +59,7 @@ local velocityX = 0
 local velocityY = 0
 
 local bend = require('bend')
--- bend.drawGrid(display, mainGroup, config)
+--bend.drawGrid(display, mainGroup, config)
 
 local level = require('level')
 level.make(display, physics, mainGroup, letterbox)
@@ -72,7 +72,7 @@ local particleParams = particleManager.makeParticleParams(letterbox)
 
 -- Generate particles on repeating timer
 local function onTimer( event )
-	particleSystem:createParticle( particleParams.red )
+	-- particleSystem:createParticle( particleParams.red )
 	particleSystem:createParticle( particleParams.blue )
 end
 timer.performWithDelay( 10, onTimer, 0 )
@@ -81,7 +81,7 @@ timer.performWithDelay( 10, onTimer, 0 )
 local crate
 local function makeCrate( event )
 	crate = display.newRect( mainGroup, 30, 30, crateSize, crateSize )
-	physics.addBody( crate, "dynamic", { density=1.5 } )
+	physics.addBody( crate, "dynamic", { density=1 } )
 end
 timer.performWithDelay( 20, makeCrate, 1 )
 
@@ -115,7 +115,7 @@ end
 local function onTouch(event)
 
 	local timeDelta = ( event.time / 1000 ) - previousTime
-	if ( timeDelta > 0 ) then
+	if timeDelta > 0 then
 		touchX = event.x
 		touchY = event.y
 		previousTime = ( event.time / 1000 )
@@ -125,21 +125,26 @@ local function onTouch(event)
 		previousY = touchY
 		velocityX = ( positionDeltaX / timeDelta )
 		velocityY = ( positionDeltaY / timeDelta )
+
+		bend.run(config, particleSystem, event.time, event.x, event.y, velocityX, velocityY)
+
+		if config.bending.debugPrint then
+			if ( "began" == event.phase ) then
+				print('began')
+			elseif ( "moved" == event.phase ) then
+				print('moved')
+			elseif ( "ended" == event.phase or "cancelled" == event.phase ) then
+				print('end')
+			end
+		end
 	end
 
-	if ( "began" == event.phase ) then
-		if ( timeDelta > 0 ) then
-			print(event.x, event.y)
-			bend.run(config, particleSystem, event.x, event.y)
-		end
-	elseif ( "moved" == event.phase ) then
-		print('moved')
-	elseif ( "ended" == event.phase or "cancelled" == event.phase ) then
-		print('end')
-	end
 	return true
 end
 Runtime:addEventListener( "touch", onTouch )
 
 local switches = require('switches')
 switches.addSwitches(display, widget, mainGroup, letterbox.height)
+
+local runRender = function() return bend.render(config, particleSystem) end
+timer.performWithDelay(config.bending.renderDelay, runRender, -1)

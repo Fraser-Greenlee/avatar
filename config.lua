@@ -3,8 +3,8 @@ application =
 	content =
 	{
 		fps = 60,
-		width = 320,
-		height = 480,
+		width = 480,
+		height = 320,
 		scale = "letterbox",
 		xAlign = "center",
 		yAlign = "center",

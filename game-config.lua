@@ -2,16 +2,23 @@ local startConfig = {
     bending = {
         pixel = {
             per = {
-                row = 60
+                row = 30
             }
         },
         radius = {
-            px = 10
+            px = 3
         },
         boxes = {},
-        boxIndex = 0 -- is this needed?
+        renderDelay = 0.1,
+        power = 200,
+        maxAge = 1,
+        playerVstatic = 0.2,
+        playerVmultiplier = 0,
+
+        debugLine = false,
+        debugPrint = false,
     },
-    crateSize = 32
+    crateSize = 32,
 }
 
 return {

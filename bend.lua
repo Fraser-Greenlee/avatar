@@ -1,27 +1,28 @@
 
 local function bendingPixelXY(config, x, y)
-	pixelX = math.floor(x / config.bending.pixel.size)
-	pixelY = math.floor(y / config.bending.pixel.size)
+	local pixelX = math.floor(x / config.bending.pixel.size)
+	local pixelY = math.floor(y / config.bending.pixel.size)
 	return pixelX, pixelY
 end
 
-local function getBendingPixel(config, x, y)
-    return config.bending.boxes[tostring(x) .. tostring(y)]
+local function staticDeltaV(config, XorY)
+    return - config.bending.power * (XorY / config.bending.radius.px)
 end
 
-local function newPixel(config, x, y)
-    return {
-        xDir=0,
-        
-    }
+local function setDeltaV(config, XorY, playerVX_or_Y)
+    return (staticDeltaV(config, XorY) * (1 - config.bending.playerVstatic) + playerVX_or_Y * config.bending.playerVmultiplier * config.bending.playerVstatic) / 2
 end
 
-local function debugRect(config, x, y)
-    local bendingPixel = config.display.newRect( config.mainGroup, x*config.bending.pixel.size, y*config.bending.pixel.size, config.bending.pixel.size, config.bending.pixel.size )
-    bendingPixel.strokeWidth = 1
-    bendingPixel:setStrokeColor( 1, 0.4, 0.25 )
-    bendingPixel:setFillColor( 1, 0.4, 0.25, 0.2 )
-    return bendingPixel
+local function showDebug(config, pixel)
+    -- NOTE this will dramatically slow down the game
+    if config.bending.debugLine then
+        local line = config.display.newLine(
+            config.mainGroup,
+            pixel.x, pixel.y, pixel.x + pixel.deltaVX/10, pixel.y + pixel.deltaVY/10
+        )
+        line:setStrokeColor( math.random(), math.random(), math.random(), 1 )
+        line.strokeWidth = 1
+    end
 end
 
 
@@ -39,8 +40,8 @@ return {
         end
     end,
 
-    run = function(config, particleSystem, x, y)
-        centreX, centreY = bendingPixelXY(config, x, y)
+    run = function(config, particleSystem, time, globalX, globalY, playerVX, playerVY)
+        centreX, centreY = bendingPixelXY(config, globalX, globalY)
 
         for y = centreY - config.bending.radius.px, centreY + config.bending.radius.px do
             for x = centreX - config.bending.radius.px, centreX + config.bending.radius.px do
@@ -50,25 +51,41 @@ return {
                 local distance = math.sqrt(relX*relX + relY*relY)
     
                 if distance <= config.bending.radius.px then
-                    local pixel = getBendingPixel(config, x, y)
+                    local pixel = config.bending.boxes[tostring(x) .. ',' .. tostring(y)]
                     if pixel == nil then
                         pixel = {}
                     end
-                    -- TODO set pixel value, then render
-                    pixel.deltaVX = relX
-                    pixel.deltaVY = relY
+                    pixel.deltaVX = setDeltaV(config, relX, playerVX)
+                    pixel.deltaVY = setDeltaV(config, relY, playerVY)
+                    pixel.x = x * config.bending.pixel.size
+                    pixel.y = y * config.bending.pixel.size
+                    pixel.madeAt = time
+                    config.bending.boxes[tostring(x) .. ',' .. tostring(y)] = pixel
+
+                    showDebug(config, pixel)
                 end
             end
         end
+    end,
 
-        
+    render = function(config, particleSystem)
+        for coords, pixel in pairs(config.bending.boxes) do
+            if (pixel ~= nil) then
+                local age = (system.getTimer() - pixel.madeAt) / 1000
+                if (age >= config.bending.maxAge) then
+                    config.bending.boxes[coords] = nil
+                else
+                    local ageRatio = 1 - (age / config.bending.maxAge)
 
-        local region = particleSystem:queryRegion(
-			box.x - bendingBoxSize/2,
-			box.y - bendingBoxSize/2,
-			box.x + bendingBoxSize/2,
-			box.y + bendingBoxSize/2,
-			{ deltaVelocityX=velocityX*bendingCoefficient, deltaVelocityY=velocityY*bendingCoefficient }
-		)
+                    local region = particleSystem:queryRegion(
+                        pixel.x - config.bending.pixel.size/2,
+                        pixel.y - config.bending.pixel.size/2,
+                        pixel.x + config.bending.pixel.size/2,
+                        pixel.y + config.bending.pixel.size/2,
+                        { deltaVelocityX=pixel.deltaVX * ageRatio, deltaVelocityY=pixel.deltaVY * ageRatio }
+                    )
+                end
+            end
+        end
     end
 }
