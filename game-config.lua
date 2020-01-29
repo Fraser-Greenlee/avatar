@@ -6,12 +6,12 @@ local startConfig = {
             }
         },
         radius = {
-            px = 3
+            px = 2.5
         },
         boxes = {},
-        renderDelay = 0.1,
-        staticDelay = 0.5,
-        power = 200,
+        renderDelay = 1,
+        staticDelay = 1,
+        power = 100,
         maxAge = 1,
         playerVstatic = 0.2,
         playerVmultiplier = 0,

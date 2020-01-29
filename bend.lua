@@ -6,11 +6,18 @@ local function bendingPixelXY(config, x, y)
 end
 
 local function staticDeltaV(config, XorY)
-    return - config.bending.power * (XorY / config.bending.radius.px)
+    --[[
+        TODO
+        - gradually ramp up deltaV until at 80% bending radius
+        - then gradually decrease till last 10% radius
+        - put 0 force there
+    ]]
+    local bendingCoeff = ( (XorY / config.bending.radius.px) - 0.1 )
+    return - config.bending.power * bendingCoeff
 end
 
 local function setDeltaV(config, XorY, playerVX_or_Y)
-    return (staticDeltaV(config, XorY) * (1 - config.bending.playerVstatic) + playerVX_or_Y * config.bending.playerVmultiplier * config.bending.playerVstatic) / 2
+    return staticDeltaV(config, XorY) * (1 - config.bending.playerVstatic)
 end
 
 local function showDebug(config, pixel)

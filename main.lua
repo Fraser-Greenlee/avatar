@@ -75,7 +75,7 @@ local function onTimer( event )
 	-- particleSystem:createParticle( particleParams.red )
 	particleSystem:createParticle( particleParams.blue )
 end
-timer.performWithDelay( 10, onTimer, 0 )
+timer.performWithDelay( 100, onTimer, 0 )
 
 -- make crate
 local crate
@@ -84,32 +84,6 @@ local function makeCrate( event )
 	physics.addBody( crate, "dynamic", { density=1 } )
 end
 timer.performWithDelay( 20, makeCrate, 1 )
-
---[[
-
--- Function to query region or destroy particles in particle system
-local function enterFrame( event )
-
-	if ( touchBehavior == "move" ) then
-		local region = particleSystem:queryRegion(
-			box.x - bendingBoxSize/2,
-			box.y - bendingBoxSize/2,
-			box.x + bendingBoxSize/2,
-			box.y + bendingBoxSize/2,
-			{ deltaVelocityX=velocityX*bendingCoefficient, deltaVelocityY=velocityY*bendingCoefficient }
-		)
-	elseif ( touchBehavior == "destroy" ) then
-		local region = particleSystem:destroyParticles(
-		{
-			x = box.x,
-			y = box.y,
-			halfWidth = bendingBoxSize/2,
-			halfHeight = bendingBoxSize/2
-		})
-	end
-end
-
-]]
 
 local staticBend = function()
 	if (previousTime + config.bending.staticDelay < system.getTimer()) then

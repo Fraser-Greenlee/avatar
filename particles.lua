@@ -2,10 +2,14 @@ return {
 
     makeParticleSystem = function(physics)
         return physics.newParticleSystem({
-            filename = "waterParticle.png",
+            filename = "square.png",
             colorMixingStrength = 0.2,
-            radius = 2.5,
-            imageRadius = 7
+            radius=7,
+            imageRadius=9,
+            density=1.3,
+            gravityScale=4,
+            pressureStrength=0.1,
+
         })
     end,
 
@@ -21,10 +25,10 @@ return {
                 flags = { "water" }
             },
             blue = {
-                x = 320+letterbox.width,
+                x = 300+letterbox.width,
                 y = 300-letterbox.height,
-                velocityX = -300,
-                velocityY = 80,
+                velocityX = -350,
+                velocityY = -30,
                 color = { 0.3, 0.4, 1, 1 },
                 lifetime = 48,
                 flags = { "water" }
